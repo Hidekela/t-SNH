@@ -141,7 +141,22 @@ def _conditional_probabilities(X, d_ij_2, Perp):
 	
 	return p_ji_s
 
-def tSNH(X, Perp, T, eta, alpha, d):
+def tSNH(X, Perp=50, T=1000, eta=200, alpha, d=2):
+	"""t-SNH is a method for dimension reduction of data (t-SNE done by Niaina and Hidekela).
+	It is a reimplementation of t-SNE method. It aims to facilitate data visualization which
+	has big dimension (greater or equal to 3).
+	
+	Return a matrix with d < D dimension of data from the original D dimension data.
+	
+	Parameters:
+	-----------
+	X : n x D array : the data 
+	Perp: int (default=50) the perplexity
+	T : int (default=1000) iteration number
+	eta : int (default=200) learning rate
+	alpha : float momentum
+	d : int (default=2) dimension of the reduced space
+	"""
 	assert _is_iterable(X) and len(X) > 0 and _is_iterable(X[0])
 	assert type(Perp) == float
 	assert type(T) == int and T > 0
