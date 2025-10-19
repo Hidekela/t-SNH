@@ -187,7 +187,7 @@ def _grad_KL(P, Q, Y, dy_ij_2):
 	dKL_dy_i = lambda P, Q, dy_ij_2, Y, i: 4 * sum([(P[i][j] - Q[i][j]) * (Y[i] - Y[j]) / (1 + dy_ij_2[i][j]) for j in range(n) if j != i])
 	
 	# Compute for all
-	grad_KL = zeros((n,n))
+	grad_KL = zeros((n,d))
 	for i in range(n):
 		grad_KL[i] = dKL_dy_i(P, Q, dy_ij_2, Y, i)
 		
