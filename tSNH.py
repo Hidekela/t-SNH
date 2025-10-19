@@ -97,7 +97,7 @@ def _matrix_distances_squared(X):
 
 	return d
 
-def conditional_probabilities(X, d_ij_2, Perp):
+def _conditional_probabilities(X, d_ij_2, Perp):
 	"""Compute for all j the conditional probability p_j|i such that 
 	Perp = 2^H(p_j|i)
 	
@@ -154,8 +154,7 @@ def tSNH(X, Perp, T, eta, alpha, d):
 	d_ij_2 = _matrix_distances_squared(X) # the matrix distances squared
 	
 	# Compute p_{j|i} with Perp
-	for i in range(n):
-		pass
+	p_ji_s = _conditional_probabilities(X, d_ij_2, Perp)
 
 	# Set p_ij = (p_{j|i} + p_{i|j}) / 2n
 	# Sample initial solution Y = [y1, ..., yn] from N(0, 10^-4 I)
@@ -193,14 +192,13 @@ if __name__ == "__main__":
 	# ~ d_ij_2 = _matrix_distances_squared(X)
 	# ~ print("The matrix distances squared is\n", d_ij_2)
 	
-	# CONDITIONAL PROBABILITIES
-	
+	# CONDITIONAL PROBABILITIES TEST
 	X = [(0,0,1), (2,0,0), (0,3,0)]
 	print(X)
 	d_ij_2 = _matrix_distances_squared(X)
 	print("The matrix distances squared is\n", d_ij_2)
 	Perp = int(input("Enter perplexity: "))
-	p_ji_s = conditional_probabilities(X, d_ij_2, Perp)
+	p_ji_s = _conditional_probabilities(X, d_ij_2, Perp)
 	print("The conditional probabilities p_ji_s are: ")
 	for i in range(len(p_ji_s)):
 		for j in range(len(p_ji_s[0])):
