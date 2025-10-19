@@ -182,6 +182,7 @@ def _grad_KL(P, Q, Y, dy_ij_2):
 	
 	# Set variables
 	n = len(Y) # number of data
+	d = len(Y[0])
 	
 	# KL gradient formula
 	dKL_dy_i = lambda P, Q, dy_ij_2, Y, i: 4 * sum([(P[i][j] - Q[i][j]) * (Y[i] - Y[j]) / (1 + dy_ij_2[i][j]) for j in range(n) if j != i])
@@ -234,6 +235,9 @@ def tSNH(X, Perp=50, T=1000, eta=200, alpha=0., d=2):
 	# Sample initial solution Y = [y1, ..., yn] from N(0, 10^-4 I)
 	Y = random.normal(0, 0.0001, size=(n, d))
 	
+	# Set Y_1 as an intermediate
+	Y_1 = Y.copy()
+	
 	for t in range(T):
 		# distances between y(s) are necessary
 		dy_ij_2 = _matrix_distances_squared(Y)
@@ -245,7 +249,10 @@ def tSNH(X, Perp=50, T=1000, eta=200, alpha=0., d=2):
 		grad_KL = _grad_KL(P, Q, Y, dy_ij_2)
 		
 		# Set Y(t) = Y(t-1) + eta * grad + alpha * (Y(t-1) - Y(t-2))
-		pass
+		Y_2 = Y_1.copy()
+		Y_1 = Y.copy() # just an intermediate
+		Y = Y - eta * grad_KL + alpha * (Y - Y_2)
+		
 	return Y
 	
 if __name__ == "__main__":
@@ -258,7 +265,9 @@ if __name__ == "__main__":
 	# ~ eta = float(input("Enter the learning rate: "))
 	# ~ alpha = float(input("Enter the momentum: "))
 	# ~ d = float(input("Enter the dimension d of the reduced space: "))
-	tSNH(X, Perp)
+	Y = tSNH(X, Perp)
+	print("Data with dimension reduced: ")
+	print(Y)
 	
 	# Y = tSNH(X, Perp, T, eta, alpha)
 	# print("The data with reduced dimension: ")
