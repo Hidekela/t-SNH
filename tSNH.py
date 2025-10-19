@@ -167,6 +167,32 @@ def _reduced_dim_joint_prbabilities(Y, dy_ij_2):
 
 	return Q
 
+def _grad_KL(P, Q, Y, dy_ij_2):
+	"""Compute the gradient of KL divergence between two distributions P and Q with respect of Y.
+	
+	Return a (matrix form) list of partial differentials of KL(P||Q)
+	
+	Parameters:
+	-----------
+	P : n x n array : the first distribution
+	Q : n x n array : the second distribution
+	Y : n x d array : the data in the reduced dimension
+	dy_ij_2 : n x n array : the matrix distances squared (for Y)
+	"""
+	
+	# Set variables
+	n = len(Y) # number of data
+	
+	# KL gradient formula
+	dKL_dy_i = lambda P, Q, dy_ij_2, Y, i: 4 * sum([(P[i][j] - Q[i][j]) * (Y[i] - Y[j]) / (1 + dy_ij_2[i][j]) for j in range(n) if j != i])
+	
+	# Compute for all
+	grad_KL = zeros((n,n))
+	for i in range(n):
+		grad_KL[i] = dKL_dy_i(P, Q, dy_ij_2, Y, i)
+		
+	return grad_KL
+
 def tSNH(X, Perp=50, T=1000, eta=200, alpha=0., d=2):
 	"""t-SNH is a method for dimension reduction of data (t-SNE done by Niaina and Hidekela).
 	It is a reimplementation of t-SNE method. It aims to facilitate data visualization which
@@ -216,6 +242,8 @@ def tSNH(X, Perp=50, T=1000, eta=200, alpha=0., d=2):
 		Q = _reduced_dim_joint_prbabilities(Y, dy_ij_2)
 		
 		# Compute grad = dC/dY
+		grad_KL = _grad_KL(P, Q, Y, dy_ij_2)
+		
 		# Set Y(t) = Y(t-1) + eta * grad + alpha * (Y(t-1) - Y(t-2))
 		pass
 	return Y
