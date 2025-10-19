@@ -1,4 +1,4 @@
-from numpy import exp, log, sum
+from numpy import exp, log, sum, zeros, random
 
 def _is_iterable(variable):
 	return "__iter__" in dir(variable)
@@ -103,7 +103,7 @@ def _conditional_probabilities(X, d_ij_2, Perp):
 	
 	Return a matrix containing p_j|i for all j and for all i
 	
-	Parameter:
+	Parameters:
 	----------
 	X : n x D array : the data 
 	d_ij_2 : n x n array : the matrix distances squared 
@@ -140,8 +140,34 @@ def _conditional_probabilities(X, d_ij_2, Perp):
 			p_ji_s[j][i] = p_j_given_i(beta_i, j, i)
 	
 	return p_ji_s
+	
+def _reduced_dim_joint_prbabilities(Y, dy_ij_2):
+	"""Compute the joint probabilities q_ij for Y 
+	
+	Return a matrix of q_ij for all j and for all i
+	
+	Parameters:
+	-----------
+	Y : n x d array : the random initial data in the reduced dimension
+	dy_ij_2 : n x n array : the matrix distances squared (for Y)
+	"""
+	
+	# Set variables
+	n = len(Y) # number of data
+	
+	# joint probability q_ij
+	q_ij = lambda i, j: (1 / ((1 + dy_ij_2[i][j]) * sum([sum([1 / (1 + dy_ij_2[k][l]) for k in range(n) if k != l]) for l in range(n)]))) if i != j else 0
 
-def tSNH(X, Perp=50, T=1000, eta=200, alpha, d=2):
+	# Compute the value of matrix Q = q_ij for all i, j
+	Q = zeros((n,n))
+	for i in range(n-1):
+		for j in range(i+1, n):
+			Q[i][j] = q_ij(i, j)
+			Q[j][i] = Q[i][j]
+
+	return Q
+
+def tSNH(X, Perp=50, T=1000, eta=200, alpha=0., d=2):
 	"""t-SNH is a method for dimension reduction of data (t-SNE done by Niaina and Hidekela).
 	It is a reimplementation of t-SNE method. It aims to facilitate data visualization which
 	has big dimension (greater or equal to 3).
@@ -154,15 +180,15 @@ def tSNH(X, Perp=50, T=1000, eta=200, alpha, d=2):
 	Perp: int (default=50) the perplexity
 	T : int (default=1000) iteration number
 	eta : int (default=200) learning rate
-	alpha : float momentum
+	alpha : float (default=0) momentum
 	d : int (default=2) dimension of the reduced space
 	"""
 	assert _is_iterable(X) and len(X) > 0 and _is_iterable(X[0])
-	assert type(Perp) == float
+	assert type(Perp) == int
 	assert type(T) == int and T > 0
-	assert type(eta) == float
+	assert type(eta) == int
 	assert type(alpha) == float
-	assert type(d) == int and d > 0
+	assert type(d) == int and d > 0 and d < len(X)
 
 	# Set variables
 	n = len(X) # number of data
@@ -172,23 +198,39 @@ def tSNH(X, Perp=50, T=1000, eta=200, alpha, d=2):
 	p_ji_s = _conditional_probabilities(X, d_ij_2, Perp)
 
 	# Set p_ij = (p_{j|i} + p_{i|j}) / 2n
+	P = zeros((n,n))
+	for i in range(n-1):
+		for j in range(i+1, n):
+			P[i][j] = (p_ji_s[j][i] + p_ji_s[i][j]) / (2 * n)
+			P[j][i] = P[i][j]
+	del p_ji_s # useless from here
+			
 	# Sample initial solution Y = [y1, ..., yn] from N(0, 10^-4 I)
+	Y = random.normal(0, 0.0001, size=(n, d))
+	
 	for t in range(T):
-		# Compute q_ij
+		# distances between y(s) are necessary
+		dy_ij_2 = _matrix_distances_squared(Y)
+		
+		# Compute Q = q_ij
+		Q = _reduced_dim_joint_prbabilities(Y, dy_ij_2)
+		
 		# Compute grad = dC/dY
 		# Set Y(t) = Y(t-1) + eta * grad + alpha * (Y(t-1) - Y(t-2))
 		pass
 	return Y
 	
 if __name__ == "__main__":
-	# print("Generate data...")
-	# X = [[]]
-	# print("Data: ")
-	# print(X)
-	# Perp = float(input("Enter the perplexity: "))
-	# T = int(input("Enter the number of iterations: "))
-	# eta = float(input("Enter the learning rate: "))
-	# alpha = float(input("Enter the momentum: "))
+	print("Generate data...")
+	X = [(0,0,1), (2,0,0), (0,3,0)]
+	print("Data: ")
+	print(X)
+	Perp = int(input("Enter the perplexity: "))
+	# ~ T = int(input("Enter the number of iterations: "))
+	# ~ eta = float(input("Enter the learning rate: "))
+	# ~ alpha = float(input("Enter the momentum: "))
+	# ~ d = float(input("Enter the dimension d of the reduced space: "))
+	tSNH(X, Perp)
 	
 	# Y = tSNH(X, Perp, T, eta, alpha)
 	# print("The data with reduced dimension: ")
@@ -207,14 +249,14 @@ if __name__ == "__main__":
 	# ~ d_ij_2 = _matrix_distances_squared(X)
 	# ~ print("The matrix distances squared is\n", d_ij_2)
 	
-	# CONDITIONAL PROBABILITIES TEST
-	X = [(0,0,1), (2,0,0), (0,3,0)]
-	print(X)
-	d_ij_2 = _matrix_distances_squared(X)
-	print("The matrix distances squared is\n", d_ij_2)
-	Perp = int(input("Enter perplexity: "))
-	p_ji_s = _conditional_probabilities(X, d_ij_2, Perp)
-	print("The conditional probabilities p_ji_s are: ")
-	for i in range(len(p_ji_s)):
-		for j in range(len(p_ji_s[0])):
-			print(f"p_{j}|{i} = {p_ji_s[j][i]}")
+	# ~ # CONDITIONAL PROBABILITIES TEST
+	# ~ X = [(0,0,1), (2,0,0), (0,3,0)]
+	# ~ print(X)
+	# ~ d_ij_2 = _matrix_distances_squared(X)
+	# ~ print("The matrix distances squared is\n", d_ij_2)
+	# ~ Perp = int(input("Enter perplexity: "))
+	# ~ p_ji_s = _conditional_probabilities(X, d_ij_2, Perp)
+	# ~ print("The conditional probabilities p_ji_s are: ")
+	# ~ for i in range(len(p_ji_s)):
+		# ~ for j in range(len(p_ji_s[0])):
+			# ~ print(f"p_{j}|{i} = {p_ji_s[j][i]}")
