@@ -349,6 +349,7 @@ if __name__ == "__main__":
 	print("X data:")
 	print(np.array(X))
 	
+	d = 2
 	Perp = 2.0
 	T = 1000 # iterations number
 	eta = 100.0 # Learning rate
