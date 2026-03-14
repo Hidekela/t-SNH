@@ -35,9 +35,6 @@ git clone https://github.com/Hidekela/t-SNH.git
 
 Ce projet a été réalisé dans le cadre du parcours MAFI (Mathématiques, Algorithmes, Finance et Informatique). Il démontre l'application des theories mathematiques à la science des données.
 ## 👥 Équipe (Binôme)
-Ce projet a été réalisé en collaboration par :
-* **Voahanginiaina Roberte RANDRIANJAFY** - [niaina1610](https://github.com/niaina1610)
-* **Hidekela Fanaperantsoa RAJAOVELONA** - [Hidekela](https://github.com/Hidekela)
 
 
 
